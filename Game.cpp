@@ -98,6 +98,15 @@ void Game::Render()
     // TODO: Add your rendering code here.
     context;
 
+    // FPSを取得する
+    uint32_t fps = m_timer.GetFramesPerSecond();
+
+    // FPSの表示
+    m_debugFont->AddString(0, 0, Colors::White, L"FPS=%d", fps);
+
+    // デバッグフォントの描画
+    m_debugFont->Render(m_states.get());
+
     m_deviceResources->PIXEndEvent();
 
     // Show the new frame.
@@ -185,9 +194,17 @@ void Game::GetDefaultSize(int& width, int& height) const noexcept
 void Game::CreateDeviceDependentResources()
 {
     auto device = m_deviceResources->GetD3DDevice();
+    auto context = m_deviceResources->GetD3DDeviceContext();
 
     // TODO: Initialize device dependent objects here (independent of window size).
     device;
+
+    // 共通ステートの作成
+    m_states = std::make_unique<CommonStates>(device);
+
+    // デバッグフォントの作成
+    m_debugFont = std::make_unique<Imase::DebugFont>(device
+        , context, L"Resources\\Font\\SegoeUI_18.spritefont");
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.

@@ -179,14 +179,22 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="DeviceResources.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="ImaseLib\DebugCamera.h" />
+    <ClInclude Include="ImaseLib\DebugFont.h" />
+    <ClInclude Include="ImaseLib\GridFloor.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="StepTimer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="DeviceResources.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="ImaseLib\DebugCamera.cpp" />
+    <ClCompile Include="ImaseLib\DebugFont.cpp" />
+    <ClCompile Include="ImaseLib\GridFloor.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

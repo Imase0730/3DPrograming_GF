@@ -7,6 +7,7 @@
 #include "DeviceResources.h"
 #include "StepTimer.h"
 
+#include "ImaseLib/DebugFont.h"
 
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.
@@ -60,4 +61,13 @@ private:
 
     // Rendering loop timer.
     DX::StepTimer                           m_timer;
+
+private:
+
+    // 共通ステート
+    std::unique_ptr<DirectX::CommonStates> m_states;
+
+    // デバッグフォント
+    std::unique_ptr<Imase::DebugFont> m_debugFont;
+
 };
