@@ -37,6 +37,10 @@ void Game::Initialize(HWND window, int width, int height)
     m_timer.SetFixedTimeStep(true);
     m_timer.SetTargetElapsedSeconds(1.0 / 60);
     */
+
+    // デバッグカメラの作成
+    m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
+
 }
 
 #pragma region Frame Update
@@ -44,9 +48,9 @@ void Game::Initialize(HWND window, int width, int height)
 void Game::Tick()
 {
     m_timer.Tick([&]()
-    {
-        Update(m_timer);
-    });
+        {
+            Update(m_timer);
+        });
 
     Render();
 }
@@ -58,6 +62,9 @@ void Game::Update(DX::StepTimer const& timer)
 
     // TODO: Add your game logic here.
     elapsedTime;
+
+    // デバッグカメラの更新
+    m_debugCamera->Update();
 
 }
 #pragma endregion
@@ -79,6 +86,18 @@ void Game::Render()
 
     // TODO: Add your rendering code here.
     context;
+
+    // デバッグカメラからビュー行列を取得する
+    SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
+
+    // グリッドの床」の描画
+    m_gridFloor->Render(context, view, m_proj);
+
+    // ワールド行列
+    SimpleMath::Matrix world;
+
+    // ティーポットの描画
+    m_teapot->Draw(world, view, m_proj);
 
     // FPSを取得する
     uint32_t fps = m_timer.GetFramesPerSecond();
@@ -187,12 +206,29 @@ void Game::CreateDeviceDependentResources()
     // デバッグフォントの作成
     m_debugFont = std::make_unique<Imase::DebugFont>(device
         , context, L"Resources\\Font\\SegoeUI_18.spritefont");
+
+    // グリッド床の作成
+    m_gridFloor = std::make_unique<Imase::GridFloor>(device, context, m_states.get());
+
+    // ティーポットの作成
+    m_teapot = GeometricPrimitive::CreateTeapot(context);
+
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
 void Game::CreateWindowSizeDependentResources()
 {
     // TODO: Initialize windows-size dependent objects here.
+
+    // 画面サイズの取得
+    RECT rect = m_deviceResources->GetOutputSize();
+
+    // 射影行列の作成
+    m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+        XMConvertToRadians(45.0f)
+        , static_cast<float>(rect.right) / static_cast<float>(rect.bottom)
+        , 0.1f, 100.0f);
+
 }
 
 void Game::OnDeviceLost()
