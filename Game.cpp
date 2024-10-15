@@ -59,24 +59,6 @@ void Game::Update(DX::StepTimer const& timer)
     // TODO: Add your game logic here.
     elapsedTime;
 
-    // キーボードを取得する
-    auto kb = Keyboard::Get().GetState();
-
-    // スペースキーが押されたら
-    if (kb.Space)
-    {
-        OutputDebugString(L"Pushed Space Key!\n");
-    }
-
-    // マウスを取得する
-    auto state = Mouse::Get().GetState();
-
-    // マウスの左ボタンが押されたら
-    if (state.leftButton)
-    {
-        OutputDebugString(L"Pushed Mouse Left Button!\n");
-    }
-
 }
 #pragma endregion
 
