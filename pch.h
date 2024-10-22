@@ -96,5 +96,5 @@ namespace DX
 #include "VertexTypes.h"
 #include "DirectXHelpers.h"
 #include "GeometricPrimitive.h"
-
+#include "Model.h"
 

@@ -81,8 +81,7 @@ private:
     // デバッグカメラ
     std::unique_ptr<Imase::DebugCamera> m_debugCamera;
 
-    // ティーポット
-    std::unique_ptr<DirectX::GeometricPrimitive> m_teapot;
+    // モデル
+    std::unique_ptr<DirectX::Model> m_model;
 
-
-};
+ };

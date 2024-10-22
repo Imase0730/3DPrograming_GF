@@ -96,8 +96,8 @@ void Game::Render()
     // ワールド行列
     SimpleMath::Matrix world;
 
-    // ティーポットの描画
-    m_teapot->Draw(world, view, m_proj);
+    // モデルの描画
+    m_model->Draw(context, *m_states.get(), world, view, m_proj);
 
     // FPSを取得する
     uint32_t fps = m_timer.GetFramesPerSecond();
@@ -210,10 +210,11 @@ void Game::CreateDeviceDependentResources()
     // グリッド床の作成
     m_gridFloor = std::make_unique<Imase::GridFloor>(device, context, m_states.get());
 
-    // ティーポットの作成
-    m_teapot = GeometricPrimitive::CreateTeapot(context);
+    // モデルの読み込み
+    EffectFactory fx(device);
+    m_model = Model::CreateFromSDKMESH(device, L"Resources\\Models\\Ball.sdkmesh", fx);
 
-}
+ }
 
 // Allocate all memory resources that change on a window SizeChanged event.
 void Game::CreateWindowSizeDependentResources()
