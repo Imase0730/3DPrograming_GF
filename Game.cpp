@@ -213,7 +213,7 @@ void Game::CreateDeviceDependentResources()
     // ÉÇÉfÉãÇÃì«Ç›çûÇ›
     EffectFactory fx(device);
     fx.SetDirectory(L"Resources\\Models");
-    m_model = Model::CreateFromSDKMESH(device, L"Resources\\Models\\Dice.sdkmesh", fx);
+    m_model = Model::CreateFromSDKMESH(device, L"Resources\\Models\\player.sdkmesh", fx);
 
  }
 
