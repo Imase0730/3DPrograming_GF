@@ -12,6 +12,7 @@ using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 Game::Game() noexcept(false)
+    : m_rotateY(0.0f)
 {
     m_deviceResources = std::make_unique<DX::DeviceResources>();
     // TODO: Provide parameters for swapchain format, depth/stencil format, and backbuffer count.
@@ -66,6 +67,24 @@ void Game::Update(DX::StepTimer const& timer)
     // デバッグカメラの更新
     m_debugCamera->Update();
 
+    // Y軸回転させる
+    m_rotateY += XMConvertToRadians(120.0f) * elapsedTime;
+
+    // キーボードの情報取得する
+    auto kb = Keyboard::Get().GetState();
+
+    // 上キーが押されていたら
+    if (kb.Up)
+    {
+        m_position.x += 1.0f * elapsedTime;
+    }
+
+    // 下キーが押されていたら
+    if (kb.Down)
+    {
+        m_position.x -= 1.0f * elapsedTime;
+    }
+
 }
 #pragma endregion
 
@@ -95,6 +114,18 @@ void Game::Render()
 
     // ワールド行列
     SimpleMath::Matrix world;
+
+     // 平行移動行列を作成する
+    SimpleMath::Matrix trans = SimpleMath::Matrix::CreateTranslation(m_position);
+
+    // Y軸に対する回転行列を作成する
+    SimpleMath::Matrix rotY = SimpleMath::Matrix::CreateRotationY(m_rotateY);
+
+    // 2倍に拡大する行列を作成する
+    SimpleMath::Matrix scale = SimpleMath::Matrix::CreateScale(2.0f);
+
+    // ワールド行列を更新する
+    world = scale * rotY * trans;
 
     // モデルの描画
     m_model->Draw(context, *m_states.get(), world, view, m_proj);

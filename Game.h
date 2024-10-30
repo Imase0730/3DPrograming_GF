@@ -84,4 +84,10 @@ private:
     // モデル
     std::unique_ptr<DirectX::Model> m_model;
 
+    // プレイヤーの位置
+    DirectX::SimpleMath::Vector3 m_position;
+
+    // プレイヤーのY軸に対する回転角（ラジアン）
+    float m_rotateY;
+
  };
