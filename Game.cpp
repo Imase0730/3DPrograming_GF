@@ -11,6 +11,12 @@ using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;
 
+// 飛行機の移動の速さ（１秒間に移動する距離）
+const float Game::SPEED = 3.0f;
+
+// 飛行機の回転の速さ（１秒間に回転する速さ）
+const float Game::ROTATIONAL_SPEED = 90.0f;
+
 Game::Game() noexcept(false)
     : m_rotateY(0.0f)
 {
@@ -67,22 +73,44 @@ void Game::Update(DX::StepTimer const& timer)
     // デバッグカメラの更新
     m_debugCamera->Update();
 
-    // Y軸回転させる
-    m_rotateY += XMConvertToRadians(120.0f) * elapsedTime;
-
     // キーボードの情報取得する
     auto kb = Keyboard::Get().GetState();
 
     // 上キーが押されていたら
+    if (kb.Left)
+    {
+        // 左回転する
+        m_rotateY += XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
+    }
+
+    // 下キーが押されていたら
+    if (kb.Right)
+    {
+        // 右回転する
+        m_rotateY -= XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
+    }
+
+    // 飛行機の正面ベクトル
+    SimpleMath::Vector3 forwardVector(1.0f, 0.0f, 0.0f);
+
+    // 飛行機の回転行列を作成する
+    SimpleMath::Matrix rotY = SimpleMath::Matrix::CreateRotationY(m_rotateY);
+
+    // 飛行機の正面ベクトルを行列を使用して回転する
+    forwardVector = SimpleMath::Vector3::Transform(forwardVector, rotY);
+
+    // 上キーが押されていたら
     if (kb.Up)
     {
-        m_position.x += 1.0f * elapsedTime;
+        // 前進する
+        m_position += forwardVector * SPEED * elapsedTime;
     }
 
     // 下キーが押されていたら
     if (kb.Down)
     {
-        m_position.x -= 1.0f * elapsedTime;
+        // 後進する
+        m_position -= forwardVector * SPEED * elapsedTime;
     }
 
 }
@@ -121,11 +149,8 @@ void Game::Render()
     // Y軸に対する回転行列を作成する
     SimpleMath::Matrix rotY = SimpleMath::Matrix::CreateRotationY(m_rotateY);
 
-    // 2倍に拡大する行列を作成する
-    SimpleMath::Matrix scale = SimpleMath::Matrix::CreateScale(2.0f);
-
     // ワールド行列を更新する
-    world = scale * rotY * trans;
+    world = rotY * trans;
 
     // モデルの描画
     m_model->Draw(context, *m_states.get(), world, view, m_proj);

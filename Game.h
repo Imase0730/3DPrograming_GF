@@ -84,6 +84,12 @@ private:
     // モデル
     std::unique_ptr<DirectX::Model> m_model;
 
+    // 飛行機の移動の速さ（１秒間に移動する速さ）
+    static const float SPEED;
+
+    // 飛行機の回転の速さ（１秒間に回転する速さ）
+    static const float ROTATIONAL_SPEED;
+
     // プレイヤーの位置
     DirectX::SimpleMath::Vector3 m_position;
 
