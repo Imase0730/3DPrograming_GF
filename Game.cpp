@@ -18,7 +18,7 @@ const float Game::SPEED = 3.0f;
 const float Game::ROTATIONAL_SPEED = 90.0f;
 
 Game::Game() noexcept(false)
-    : m_rotateY(0.0f)
+    : m_rotateX(0.0f), m_rotateY(0.0f), m_rotateZ(0.0f)
 {
     m_deviceResources = std::make_unique<DX::DeviceResources>();
     // TODO: Provide parameters for swapchain format, depth/stencil format, and backbuffer count.
@@ -76,41 +76,34 @@ void Game::Update(DX::StepTimer const& timer)
     // キーボードの情報取得する
     auto kb = Keyboard::Get().GetState();
 
-    // 上キーが押されていたら
-    if (kb.Left)
+    // Z軸回転
+    if (kb.E)
     {
-        // 左回転する
+        m_rotateZ += XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
+    }
+    if (kb.Q)
+    {
+        m_rotateZ -= XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
+    }
+
+    // X軸回転
+    if (kb.W)
+    {
+        m_rotateX += XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
+    }
+    if (kb.S)
+    {
+        m_rotateX -= XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
+    }
+
+    // Y軸回転
+    if (kb.A)
+    {
         m_rotateY += XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
     }
-
-    // 下キーが押されていたら
-    if (kb.Right)
+    if (kb.D)
     {
-        // 右回転する
         m_rotateY -= XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
-    }
-
-    // 飛行機の正面ベクトル
-    SimpleMath::Vector3 forwardVector(1.0f, 0.0f, 0.0f);
-
-    // 飛行機の回転行列を作成する
-    SimpleMath::Matrix rotY = SimpleMath::Matrix::CreateRotationY(m_rotateY);
-
-    // 飛行機の正面ベクトルを行列を使用して回転する
-    forwardVector = SimpleMath::Vector3::Transform(forwardVector, rotY);
-
-    // 上キーが押されていたら
-    if (kb.Up)
-    {
-        // 前進する
-        m_position += forwardVector * SPEED * elapsedTime;
-    }
-
-    // 下キーが押されていたら
-    if (kb.Down)
-    {
-        // 後進する
-        m_position -= forwardVector * SPEED * elapsedTime;
     }
 
 }
@@ -143,17 +136,34 @@ void Game::Render()
     // ワールド行列
     SimpleMath::Matrix world;
 
-     // 平行移動行列を作成する
-    SimpleMath::Matrix trans = SimpleMath::Matrix::CreateTranslation(m_position);
+    // 初期回転行列を作成する
+    SimpleMath::Matrix initRotY = SimpleMath::Matrix::CreateRotationY(XMConvertToRadians(270.0f));
 
-    // Y軸に対する回転行列を作成する
+    // 平行移動行列を作成する
+    //SimpleMath::Matrix trans = SimpleMath::Matrix::CreateTranslation(m_position);
+
+    // 各軸に対する回転行列を作成する
+    SimpleMath::Matrix rotX = SimpleMath::Matrix::CreateRotationX(m_rotateX);
     SimpleMath::Matrix rotY = SimpleMath::Matrix::CreateRotationY(m_rotateY);
+    SimpleMath::Matrix rotZ = SimpleMath::Matrix::CreateRotationZ(m_rotateZ);
 
     // ワールド行列を更新する
-    world = rotY * trans;
+    world = initRotY * rotZ * rotX * rotY;
 
-    // モデルの描画
+     // モデルの描画
     m_model->Draw(context, *m_states.get(), world, view, m_proj);
+
+    // Z軸モデルの描画
+    world = rotZ * rotX * rotY;
+    m_modelZ->Draw(context, *m_states.get(), world, view, m_proj);
+
+    // X軸モデルの描画
+    world = rotX * rotY;
+    m_modelX->Draw(context, *m_states.get(), world, view, m_proj);
+
+    // Y軸モデルの描画
+    world = rotY;
+    m_modelY->Draw(context, *m_states.get(), world, view, m_proj);
 
     // FPSを取得する
     uint32_t fps = m_timer.GetFramesPerSecond();
@@ -271,7 +281,11 @@ void Game::CreateDeviceDependentResources()
     fx.SetDirectory(L"Resources\\Models");
     m_model = Model::CreateFromSDKMESH(device, L"Resources\\Models\\player.sdkmesh", fx);
 
- }
+    // 軸モデルの読み込み
+    m_modelX = Model::CreateFromSDKMESH(device, L"Resources\\Models\\RingX.sdkmesh", fx);
+    m_modelY = Model::CreateFromSDKMESH(device, L"Resources\\Models\\RingY.sdkmesh", fx);
+    m_modelZ = Model::CreateFromSDKMESH(device, L"Resources\\Models\\RingZ.sdkmesh", fx);
+}
 
 // Allocate all memory resources that change on a window SizeChanged event.
 void Game::CreateWindowSizeDependentResources()

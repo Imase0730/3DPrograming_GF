@@ -84,6 +84,11 @@ private:
     // モデル
     std::unique_ptr<DirectX::Model> m_model;
 
+    // 軸のモデル
+    std::unique_ptr<DirectX::Model> m_modelX;
+    std::unique_ptr<DirectX::Model> m_modelY;
+    std::unique_ptr<DirectX::Model> m_modelZ;
+
     // 飛行機の移動の速さ（１秒間に移動する速さ）
     static const float SPEED;
 
@@ -93,7 +98,9 @@ private:
     // プレイヤーの位置
     DirectX::SimpleMath::Vector3 m_position;
 
-    // プレイヤーのY軸に対する回転角（ラジアン）
+    // プレイヤーの各軸に対する回転角（ラジアン）
+    float m_rotateX;
     float m_rotateY;
+    float m_rotateZ;
 
  };
