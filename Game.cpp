@@ -11,14 +11,7 @@ using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;
 
-// 飛行機の移動の速さ（１秒間に移動する距離）
-const float Game::SPEED = 3.0f;
-
-// 飛行機の回転の速さ（１秒間に回転する速さ）
-const float Game::ROTATIONAL_SPEED = 90.0f;
-
 Game::Game() noexcept(false)
-    : m_rotateX(0.0f), m_rotateY(0.0f), m_rotateZ(0.0f)
 {
     m_deviceResources = std::make_unique<DX::DeviceResources>();
     // TODO: Provide parameters for swapchain format, depth/stencil format, and backbuffer count.
@@ -73,39 +66,6 @@ void Game::Update(DX::StepTimer const& timer)
     // デバッグカメラの更新
     m_debugCamera->Update();
 
-    // キーボードの情報取得する
-    auto kb = Keyboard::Get().GetState();
-
-    // Z軸回転
-    if (kb.E)
-    {
-        m_rotateZ += XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
-    }
-    if (kb.Q)
-    {
-        m_rotateZ -= XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
-    }
-
-    // X軸回転
-    if (kb.W)
-    {
-        m_rotateX += XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
-    }
-    if (kb.S)
-    {
-        m_rotateX -= XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
-    }
-
-    // Y軸回転
-    if (kb.A)
-    {
-        m_rotateY += XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
-    }
-    if (kb.D)
-    {
-        m_rotateY -= XMConvertToRadians(ROTATIONAL_SPEED) * elapsedTime;
-    }
-
 }
 #pragma endregion
 
@@ -132,38 +92,6 @@ void Game::Render()
 
     // グリッドの床」の描画
     m_gridFloor->Render(context, view, m_proj);
-
-    // ワールド行列
-    SimpleMath::Matrix world;
-
-    // 初期回転行列を作成する
-    SimpleMath::Matrix initRotY = SimpleMath::Matrix::CreateRotationY(XMConvertToRadians(270.0f));
-
-    // 平行移動行列を作成する
-    //SimpleMath::Matrix trans = SimpleMath::Matrix::CreateTranslation(m_position);
-
-    // 各軸に対する回転行列を作成する
-    SimpleMath::Matrix rotX = SimpleMath::Matrix::CreateRotationX(m_rotateX);
-    SimpleMath::Matrix rotY = SimpleMath::Matrix::CreateRotationY(m_rotateY);
-    SimpleMath::Matrix rotZ = SimpleMath::Matrix::CreateRotationZ(m_rotateZ);
-
-    // ワールド行列を更新する
-    world = initRotY * rotZ * rotX * rotY;
-
-     // モデルの描画
-    m_model->Draw(context, *m_states.get(), world, view, m_proj);
-
-    // Z軸モデルの描画
-    world = rotZ * rotX * rotY;
-    m_modelZ->Draw(context, *m_states.get(), world, view, m_proj);
-
-    // X軸モデルの描画
-    world = rotX * rotY;
-    m_modelX->Draw(context, *m_states.get(), world, view, m_proj);
-
-    // Y軸モデルの描画
-    world = rotY;
-    m_modelY->Draw(context, *m_states.get(), world, view, m_proj);
 
     // FPSを取得する
     uint32_t fps = m_timer.GetFramesPerSecond();
@@ -276,15 +204,6 @@ void Game::CreateDeviceDependentResources()
     // グリッド床の作成
     m_gridFloor = std::make_unique<Imase::GridFloor>(device, context, m_states.get());
 
-    // モデルの読み込み
-    EffectFactory fx(device);
-    fx.SetDirectory(L"Resources\\Models");
-    m_model = Model::CreateFromSDKMESH(device, L"Resources\\Models\\player.sdkmesh", fx);
-
-    // 軸モデルの読み込み
-    m_modelX = Model::CreateFromSDKMESH(device, L"Resources\\Models\\RingX.sdkmesh", fx);
-    m_modelY = Model::CreateFromSDKMESH(device, L"Resources\\Models\\RingY.sdkmesh", fx);
-    m_modelZ = Model::CreateFromSDKMESH(device, L"Resources\\Models\\RingZ.sdkmesh", fx);
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
