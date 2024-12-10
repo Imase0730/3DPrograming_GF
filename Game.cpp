@@ -11,6 +11,17 @@ using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;
 
+// 三角形の頂点データ
+VertexPosition g_vertexes[3] =
+{
+    SimpleMath::Vector3( 0.0f, 1.0f, 0.0f),    // 0
+    SimpleMath::Vector3( 1.0f, 0.0f, 0.0f),    // 1
+    SimpleMath::Vector3(-1.0f, 0.0f, 0.0f),    // 2
+};
+
+// 三角形のインデックスデータ
+uint16_t g_indexes[3] = { 0, 1, 2 };
+
 Game::Game() noexcept(false)
 {
     m_deviceResources = std::make_unique<DX::DeviceResources>();
@@ -92,6 +103,32 @@ void Game::Render()
 
     // グリッドの床」の描画
     m_gridFloor->Render(context, view, m_proj);
+
+    ///////////////////////////////////////////////////////////
+
+    // ワールド行列
+    SimpleMath::Matrix world;
+    m_basicEffect->SetWorld(world);
+    // ビュー行列
+    m_basicEffect->SetView(view);
+    // 射影行列
+    m_basicEffect->SetProjection(m_proj);
+
+    // エフェクトを適応する
+    m_basicEffect->Apply(context);
+
+    // 入力レイアウト
+    context->IASetInputLayout(m_inputLayout.Get());
+
+    // プリミティブバッチの描画
+    m_primitiveBatch->Begin();
+
+    // 三角形の描画
+    m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 3, g_vertexes, 3);
+
+    m_primitiveBatch->End();
+
+    ///////////////////////////////////////////////////////////
 
     // FPSを取得する
     uint32_t fps = m_timer.GetFramesPerSecond();
@@ -203,6 +240,24 @@ void Game::CreateDeviceDependentResources()
 
     // グリッド床の作成
     m_gridFloor = std::make_unique<Imase::GridFloor>(device, context, m_states.get());
+
+    // ベーシックエフェクトの作成
+    m_basicEffect = std::make_unique<BasicEffect>(device);
+    // ライト(OFF)
+    m_basicEffect->SetLightingEnabled(false);
+    // 頂点カラー(OFF)
+    m_basicEffect->SetVertexColorEnabled(false);
+    // テクスチャ(OFF)
+    m_basicEffect->SetTextureEnabled(false);
+
+    // 入力レイアウトの作成
+    DX::ThrowIfFailed(
+        CreateInputLayoutFromEffect<VertexPosition>(
+            device, m_basicEffect.get(), m_inputLayout.ReleaseAndGetAddressOf())
+    );
+
+    // プリミティブバッチの作成
+    m_primitiveBatch = std::make_unique<PrimitiveBatch<VertexPosition>>(context);
 
 }
 

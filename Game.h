@@ -81,4 +81,13 @@ private:
     // デバッグカメラ
     std::unique_ptr<Imase::DebugCamera> m_debugCamera;
 
- };
+    // ベーシックエフェクト
+    std::unique_ptr<DirectX::BasicEffect> m_basicEffect;
+
+    // 入力レイアウト
+    Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
+
+    // プリミティブバッチ
+    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPosition>> m_primitiveBatch;
+ 
+};
