@@ -140,7 +140,7 @@ void Game::Render()
     // ƒvƒŠƒ~ƒeƒBƒuƒoƒbƒ`‚Ì•`‰æ
     m_primitiveBatch->Begin();
 
-    // OŠpŒ`‚Ì•`‰æ
+    // lŠpŒ`‚Ì•`‰æ
     m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 6, g_vertexes, 4);
 
     m_primitiveBatch->End();
