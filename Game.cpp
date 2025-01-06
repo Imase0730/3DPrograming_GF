@@ -111,13 +111,19 @@ void Game::Render()
 
     ///////////////////////////////////////////////////////////
 
+    // 深度ステンシルバッファの設定
+    context->OMSetDepthStencilState(m_states->DepthNone(), 0);
+
+    // ブレンドステートの設定
+    context->OMSetBlendState(m_states->AlphaBlend(), nullptr, 0xffffffff);
+
     // カリングの設定
     context->RSSetState(m_states->CullCounterClockwise());  // 頂点の順番が逆時計回りをカリングする
     //context->RSSetState(m_states->CullNone());              // カリングしない
     //context->RSSetState(m_states->CullClockwise());         // 頂点の順番が時計回りをカリングする
 
     // テクスチャサンプラーの設定
-    ID3D11SamplerState* samplers[] = { m_states->LinearClamp() };
+    ID3D11SamplerState* samplers[] = { m_states->PointClamp() };
     context->PSSetSamplers(0, 1, samplers);
 
     // ワールド行列
@@ -136,6 +142,23 @@ void Game::Render()
 
     // 入力レイアウト
     context->IASetInputLayout(m_inputLayout.Get());
+
+    // プリミティブバッチの描画
+    m_primitiveBatch->Begin();
+
+    // 四角形の描画
+    m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 6, g_vertexes, 4);
+
+    m_primitiveBatch->End();
+
+    ///------------------------------------------------------//
+
+    // ワールド行列
+    world = SimpleMath::Matrix::CreateTranslation(1.0f, 0.0f, -1.0f);
+    m_basicEffect->SetWorld(world);
+
+    // エフェクトを適応する
+    m_basicEffect->Apply(context);
 
     // プリミティブバッチの描画
     m_primitiveBatch->Begin();
@@ -279,7 +302,7 @@ void Game::CreateDeviceDependentResources()
     // DDSテクスチャの読み込み
     DX::ThrowIfFailed(
         CreateDDSTextureFromFile(
-            device, L"Resources\\Models\\image1.dds", nullptr, m_texture.ReleaseAndGetAddressOf())
+            device, L"Resources\\Models\\image3.dds", nullptr, m_texture.ReleaseAndGetAddressOf())
     );
 
 }
