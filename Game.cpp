@@ -11,16 +11,21 @@ using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;
 
-// 三角形の頂点データ
-VertexPosition g_vertexes[3] =
+// 四角形の頂点データ
+VertexPositionTexture g_vertexes[4] =
 {
-    SimpleMath::Vector3( 0.0f, 1.0f, 0.0f),    // 0
-    SimpleMath::Vector3( 1.0f, 0.0f, 0.0f),    // 1
-    SimpleMath::Vector3(-1.0f, 0.0f, 0.0f),    // 2
+    { SimpleMath::Vector3(-1.0f,  1.0f, 0.0f), SimpleMath::Vector2(0.0f, 0.0f) },    // 0
+    { SimpleMath::Vector3( 1.0f,  1.0f, 0.0f), SimpleMath::Vector2(1.0f, 0.0f) },    // 1
+    { SimpleMath::Vector3( 1.0f, -1.0f, 0.0f), SimpleMath::Vector2(1.0f, 1.0f) },    // 2
+    { SimpleMath::Vector3(-1.0f, -1.0f, 0.0f), SimpleMath::Vector2(0.0f, 1.0f) }     // 3
 };
 
-// 三角形のインデックスデータ
-uint16_t g_indexes[3] = { 0, 1, 2 };
+// 四角形のインデックスデータ
+uint16_t g_indexes[3 * 2] = 
+{
+    0, 1, 2,
+    2, 3, 0
+};
 
 Game::Game() noexcept(false)
 {
@@ -106,6 +111,15 @@ void Game::Render()
 
     ///////////////////////////////////////////////////////////
 
+    // カリングの設定
+    context->RSSetState(m_states->CullCounterClockwise());  // 頂点の順番が逆時計回りをカリングする
+    //context->RSSetState(m_states->CullNone());              // カリングしない
+    //context->RSSetState(m_states->CullClockwise());         // 頂点の順番が時計回りをカリングする
+
+    // テクスチャサンプラーの設定
+    ID3D11SamplerState* samplers[] = { m_states->LinearClamp() };
+    context->PSSetSamplers(0, 1, samplers);
+
     // ワールド行列
     SimpleMath::Matrix world;
     m_basicEffect->SetWorld(world);
@@ -113,6 +127,9 @@ void Game::Render()
     m_basicEffect->SetView(view);
     // 射影行列
     m_basicEffect->SetProjection(m_proj);
+
+    // テクスチャ
+    m_basicEffect->SetTexture(m_texture.Get());
 
     // エフェクトを適応する
     m_basicEffect->Apply(context);
@@ -124,7 +141,7 @@ void Game::Render()
     m_primitiveBatch->Begin();
 
     // 三角形の描画
-    m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 3, g_vertexes, 3);
+    m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 6, g_vertexes, 4);
 
     m_primitiveBatch->End();
 
@@ -247,17 +264,23 @@ void Game::CreateDeviceDependentResources()
     m_basicEffect->SetLightingEnabled(false);
     // 頂点カラー(OFF)
     m_basicEffect->SetVertexColorEnabled(false);
-    // テクスチャ(OFF)
-    m_basicEffect->SetTextureEnabled(false);
+    // テクスチャ(ON)
+    m_basicEffect->SetTextureEnabled(true);
 
     // 入力レイアウトの作成
     DX::ThrowIfFailed(
-        CreateInputLayoutFromEffect<VertexPosition>(
+        CreateInputLayoutFromEffect<VertexPositionTexture>(
             device, m_basicEffect.get(), m_inputLayout.ReleaseAndGetAddressOf())
     );
 
     // プリミティブバッチの作成
-    m_primitiveBatch = std::make_unique<PrimitiveBatch<VertexPosition>>(context);
+    m_primitiveBatch = std::make_unique<PrimitiveBatch<VertexPositionTexture>>(context);
+
+    // DDSテクスチャの読み込み
+    DX::ThrowIfFailed(
+        CreateDDSTextureFromFile(
+            device, L"Resources\\Models\\image1.dds", nullptr, m_texture.ReleaseAndGetAddressOf())
+    );
 
 }
 

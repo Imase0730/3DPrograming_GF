@@ -97,4 +97,5 @@ namespace DX
 #include "DirectXHelpers.h"
 #include "GeometricPrimitive.h"
 #include "Model.h"
+#include "DDSTextureLoader.h"
 
