@@ -12,19 +12,44 @@ using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 // 四角形の頂点データ
-VertexPositionTexture g_vertexes[4] =
+VertexPositionNormal g_vertexes[4 * 4] =
 {
-    { SimpleMath::Vector3(-1.0f,  1.0f, 0.0f), SimpleMath::Vector2(0.0f, 0.0f) },    // 0
-    { SimpleMath::Vector3( 1.0f,  1.0f, 0.0f), SimpleMath::Vector2(1.0f, 0.0f) },    // 1
-    { SimpleMath::Vector3( 1.0f, -1.0f, 0.0f), SimpleMath::Vector2(1.0f, 1.0f) },    // 2
-    { SimpleMath::Vector3(-1.0f, -1.0f, 0.0f), SimpleMath::Vector2(0.0f, 1.0f) }     // 3
+    // 前面
+    { SimpleMath::Vector3(-1.0f,  1.0f,  1.0f), SimpleMath::Vector3( 0.0f, 0.0f, 1.0f) },    // 0
+    { SimpleMath::Vector3( 1.0f,  1.0f,  1.0f), SimpleMath::Vector3( 0.0f, 0.0f, 1.0f) },    // 1
+    { SimpleMath::Vector3( 1.0f, -1.0f,  1.0f), SimpleMath::Vector3( 0.0f, 0.0f, 1.0f) },    // 2
+    { SimpleMath::Vector3(-1.0f, -1.0f,  1.0f), SimpleMath::Vector3( 0.0f, 0.0f, 1.0f) },    // 3
+    // 後面
+    { SimpleMath::Vector3( 1.0f,  1.0f, -1.0f), SimpleMath::Vector3( 0.0f, 0.0f, -1.0f) },   // 4
+    { SimpleMath::Vector3(-1.0f,  1.0f, -1.0f), SimpleMath::Vector3( 0.0f, 0.0f, -1.0f) },   // 5
+    { SimpleMath::Vector3(-1.0f, -1.0f, -1.0f), SimpleMath::Vector3( 0.0f, 0.0f, -1.0f) },   // 6
+    { SimpleMath::Vector3( 1.0f, -1.0f, -1.0f), SimpleMath::Vector3( 0.0f, 0.0f, -1.0f) },   // 7
+    // 左面
+    { SimpleMath::Vector3( 1.0f,  1.0f,  1.0f), SimpleMath::Vector3( 1.0f, 0.0f,  0.0f) },   // 8
+    { SimpleMath::Vector3( 1.0f,  1.0f, -1.0f), SimpleMath::Vector3( 1.0f, 0.0f,  0.0f) },   // 9
+    { SimpleMath::Vector3( 1.0f, -1.0f, -1.0f), SimpleMath::Vector3( 1.0f, 0.0f,  0.0f) },   // 10
+    { SimpleMath::Vector3( 1.0f, -1.0f,  1.0f), SimpleMath::Vector3( 1.0f, 0.0f,  0.0f) },   // 11
+    // 右面
+    { SimpleMath::Vector3(-1.0f,  1.0f, -1.0f), SimpleMath::Vector3(-1.0f, 0.0f,  0.0f) },   // 12
+    { SimpleMath::Vector3(-1.0f,  1.0f,  1.0f), SimpleMath::Vector3(-1.0f, 0.0f,  0.0f) },   // 13
+    { SimpleMath::Vector3(-1.0f, -1.0f,  1.0f), SimpleMath::Vector3(-1.0f, 0.0f,  0.0f) },   // 14
+    { SimpleMath::Vector3(-1.0f, -1.0f, -1.0f), SimpleMath::Vector3(-1.0f, 0.0f,  0.0f) },   // 15
 };
 
 // 四角形のインデックスデータ
-uint16_t g_indexes[3 * 2] = 
+uint16_t g_indexes[3 * 2 * 4] = 
 {
     0, 1, 2,
-    2, 3, 0
+    2, 3, 0,
+
+    4, 5, 6,
+    6, 7, 4,
+
+    8, 9, 10,
+    10, 11, 8,
+
+    12, 13, 14,
+    14, 15, 12,
 };
 
 Game::Game() noexcept(false)
@@ -57,6 +82,9 @@ void Game::Initialize(HWND window, int width, int height)
     // デバッグカメラの作成
     m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
 
+    // ライトの方向ベクトルの初期化
+    m_lightDir = SimpleMath::Vector3(1.0f, 0.0f, 0.0f);
+
 }
 
 #pragma region Frame Update
@@ -81,6 +109,10 @@ void Game::Update(DX::StepTimer const& timer)
 
     // デバッグカメラの更新
     m_debugCamera->Update();
+
+    // ライトをY軸回転する
+    SimpleMath::Matrix rotY = SimpleMath::Matrix::CreateRotationY(XMConvertToRadians(45.0f) * elapsedTime);
+    m_lightDir = SimpleMath::Vector3::Transform(m_lightDir, rotY);
 
 }
 #pragma endregion
@@ -112,19 +144,39 @@ void Game::Render()
     ///////////////////////////////////////////////////////////
 
     // 深度ステンシルバッファの設定
-    context->OMSetDepthStencilState(m_states->DepthNone(), 0);
+    context->OMSetDepthStencilState(m_states->DepthDefault(), 0);
 
     // ブレンドステートの設定
-    context->OMSetBlendState(m_states->AlphaBlend(), nullptr, 0xffffffff);
+    context->OMSetBlendState(m_states->Opaque(), nullptr, 0xffffffff);
 
     // カリングの設定
-    context->RSSetState(m_states->CullCounterClockwise());  // 頂点の順番が逆時計回りをカリングする
-    //context->RSSetState(m_states->CullNone());              // カリングしない
+    //context->RSSetState(m_states->CullCounterClockwise());  // 頂点の順番が逆時計回りをカリングする
+    context->RSSetState(m_states->CullNone());              // カリングしない
     //context->RSSetState(m_states->CullClockwise());         // 頂点の順番が時計回りをカリングする
 
+    // 環境光の設定
+    m_basicEffect->SetAmbientLightColor(SimpleMath::Color(0.3f, 0.3f, 0.3f));
+
+    // マテリアルの設定
+    m_basicEffect->SetDiffuseColor(Colors::White);
+    m_basicEffect->SetSpecularColor(Colors::Black);
+    m_basicEffect->SetEmissiveColor(Colors::Black);
+
+    // ライトのON/OFF
+    m_basicEffect->SetLightEnabled(0, true);
+    m_basicEffect->SetLightEnabled(1, false);
+    m_basicEffect->SetLightEnabled(2, false);
+
+    // ライトの色の設定
+    m_basicEffect->SetLightDiffuseColor(0, Colors::White);
+    m_basicEffect->SetLightSpecularColor(0, Colors::Black);
+
+    // ライトの方向を設定する
+    m_basicEffect->SetLightDirection(0, m_lightDir);
+
     // テクスチャサンプラーの設定
-    ID3D11SamplerState* samplers[] = { m_states->PointClamp() };
-    context->PSSetSamplers(0, 1, samplers);
+    //ID3D11SamplerState* samplers[] = { m_states->PointClamp() };
+    //context->PSSetSamplers(0, 1, samplers);
 
     // ワールド行列
     SimpleMath::Matrix world;
@@ -135,7 +187,7 @@ void Game::Render()
     m_basicEffect->SetProjection(m_proj);
 
     // テクスチャ
-    m_basicEffect->SetTexture(m_texture.Get());
+    //m_basicEffect->SetTexture(m_texture.Get());
 
     // エフェクトを適応する
     m_basicEffect->Apply(context);
@@ -147,24 +199,7 @@ void Game::Render()
     m_primitiveBatch->Begin();
 
     // 四角形の描画
-    m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 6, g_vertexes, 4);
-
-    m_primitiveBatch->End();
-
-    ///------------------------------------------------------//
-
-    // ワールド行列
-    world = SimpleMath::Matrix::CreateTranslation(1.0f, 0.0f, -1.0f);
-    m_basicEffect->SetWorld(world);
-
-    // エフェクトを適応する
-    m_basicEffect->Apply(context);
-
-    // プリミティブバッチの描画
-    m_primitiveBatch->Begin();
-
-    // 四角形の描画
-    m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 6, g_vertexes, 4);
+    m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 6 * 4, g_vertexes, 4 * 4);
 
     m_primitiveBatch->End();
 
@@ -283,21 +318,21 @@ void Game::CreateDeviceDependentResources()
 
     // ベーシックエフェクトの作成
     m_basicEffect = std::make_unique<BasicEffect>(device);
-    // ライト(OFF)
-    m_basicEffect->SetLightingEnabled(false);
+    // ライト(ON)
+    m_basicEffect->SetLightingEnabled(true);
     // 頂点カラー(OFF)
     m_basicEffect->SetVertexColorEnabled(false);
-    // テクスチャ(ON)
-    m_basicEffect->SetTextureEnabled(true);
+    // テクスチャ(OFF)
+    m_basicEffect->SetTextureEnabled(false);
 
     // 入力レイアウトの作成
     DX::ThrowIfFailed(
-        CreateInputLayoutFromEffect<VertexPositionTexture>(
+        CreateInputLayoutFromEffect<VertexPositionNormal>(
             device, m_basicEffect.get(), m_inputLayout.ReleaseAndGetAddressOf())
     );
 
     // プリミティブバッチの作成
-    m_primitiveBatch = std::make_unique<PrimitiveBatch<VertexPositionTexture>>(context);
+    m_primitiveBatch = std::make_unique<PrimitiveBatch<VertexPositionNormal>>(context);
 
     // DDSテクスチャの読み込み
     DX::ThrowIfFailed(

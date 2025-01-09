@@ -88,9 +88,12 @@ private:
     Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
 
     // プリミティブバッチ
-    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>> m_primitiveBatch;
+    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionNormal>> m_primitiveBatch;
  
     // テクスチャハンドル
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_texture;
+
+    // ライトの方向ベクトル
+    DirectX::SimpleMath::Vector3 m_lightDir;
 
 };
