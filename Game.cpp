@@ -85,6 +85,9 @@ void Game::Initialize(HWND window, int width, int height)
     // ライトの方向ベクトルの初期化
     m_lightDir = SimpleMath::Vector3(1.0f, 0.0f, 0.0f);
 
+    // ボールの初期位置の設定
+    m_ballPos = SimpleMath::Vector3(0.0f, 0.5f, 0.0f);
+
 }
 
 #pragma region Frame Update
@@ -138,70 +141,98 @@ void Game::Render()
     // デバッグカメラからビュー行列を取得する
     SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
 
-    // グリッドの床」の描画
-    m_gridFloor->Render(context, view, m_proj);
+    // グリッドの床の描画
+    //m_gridFloor->Render(context, view, m_proj);
 
     ///////////////////////////////////////////////////////////
 
-    // 深度ステンシルバッファの設定
-    context->OMSetDepthStencilState(m_states->DepthDefault(), 0);
-
-    // ブレンドステートの設定
-    context->OMSetBlendState(m_states->Opaque(), nullptr, 0xffffffff);
-
-    // カリングの設定
-    //context->RSSetState(m_states->CullCounterClockwise());  // 頂点の順番が逆時計回りをカリングする
-    context->RSSetState(m_states->CullNone());              // カリングしない
-    //context->RSSetState(m_states->CullClockwise());         // 頂点の順番が時計回りをカリングする
-
-    // 環境光の設定
-    m_basicEffect->SetAmbientLightColor(SimpleMath::Color(0.3f, 0.3f, 0.3f));
-
-    // マテリアルの設定
-    m_basicEffect->SetDiffuseColor(Colors::White);
-    m_basicEffect->SetSpecularColor(Colors::Black);
-    m_basicEffect->SetEmissiveColor(Colors::Black);
-
-    // ライトのON/OFF
-    m_basicEffect->SetLightEnabled(0, true);
-    m_basicEffect->SetLightEnabled(1, false);
-    m_basicEffect->SetLightEnabled(2, false);
-
-    // ライトの色の設定
-    m_basicEffect->SetLightDiffuseColor(0, Colors::White);
-    m_basicEffect->SetLightSpecularColor(0, Colors::Black);
-
-    // ライトの方向を設定する
-    m_basicEffect->SetLightDirection(0, m_lightDir);
-
-    // テクスチャサンプラーの設定
-    //ID3D11SamplerState* samplers[] = { m_states->PointClamp() };
-    //context->PSSetSamplers(0, 1, samplers);
-
     // ワールド行列
     SimpleMath::Matrix world;
-    m_basicEffect->SetWorld(world);
-    // ビュー行列
-    m_basicEffect->SetView(view);
-    // 射影行列
-    m_basicEffect->SetProjection(m_proj);
 
-    // テクスチャ
-    //m_basicEffect->SetTexture(m_texture.Get());
+    // 床のエフェクトを更新する
+    m_floorModel->UpdateEffects([&](IEffect* effect)
+        {
+            auto basicEffect = dynamic_cast<BasicEffect*>(effect);
+            if (basicEffect)
+            {
+                // Blenderで設定されたベースカラーを白に変更する
+                basicEffect->SetDiffuseColor(Colors::White);
+            }
+        }
+    );
 
-    // エフェクトを適応する
-    m_basicEffect->Apply(context);
+    // 床の描画
+    m_floorModel->Draw(context, *m_states.get(), world, view, m_proj, false, [&]()
+        {
+            // テクスチャサンプラーの設定
+            ID3D11SamplerState* samplers[] = { m_states->PointWrap() };
+            context->PSSetSamplers(0, 1, samplers);
+        }
+    );
 
-    // 入力レイアウト
-    context->IASetInputLayout(m_inputLayout.Get());
+    // ボールの描画
+    world = SimpleMath::Matrix::CreateTranslation(m_ballPos);
+    m_ballModel->Draw(context, *m_states.get(), world, view, m_proj);
 
-    // プリミティブバッチの描画
-    m_primitiveBatch->Begin();
+    //// 深度ステンシルバッファの設定
+    //context->OMSetDepthStencilState(m_states->DepthDefault(), 0);
 
-    // 四角形の描画
-    m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 6 * 4, g_vertexes, 4 * 4);
+    //// ブレンドステートの設定
+    //context->OMSetBlendState(m_states->Opaque(), nullptr, 0xffffffff);
 
-    m_primitiveBatch->End();
+    //// カリングの設定
+    ////context->RSSetState(m_states->CullCounterClockwise());  // 頂点の順番が逆時計回りをカリングする
+    //context->RSSetState(m_states->CullNone());              // カリングしない
+    ////context->RSSetState(m_states->CullClockwise());         // 頂点の順番が時計回りをカリングする
+
+    //// 環境光の設定
+    //m_basicEffect->SetAmbientLightColor(SimpleMath::Color(0.3f, 0.3f, 0.3f));
+
+    //// マテリアルの設定
+    //m_basicEffect->SetDiffuseColor(Colors::White);
+    //m_basicEffect->SetSpecularColor(Colors::Black);
+    //m_basicEffect->SetEmissiveColor(Colors::Black);
+
+    //// ライトのON/OFF
+    //m_basicEffect->SetLightEnabled(0, true);
+    //m_basicEffect->SetLightEnabled(1, false);
+    //m_basicEffect->SetLightEnabled(2, false);
+
+    //// ライトの色の設定
+    //m_basicEffect->SetLightDiffuseColor(0, Colors::White);
+    //m_basicEffect->SetLightSpecularColor(0, Colors::Black);
+
+    //// ライトの方向を設定する
+    //m_basicEffect->SetLightDirection(0, m_lightDir);
+
+    //// テクスチャサンプラーの設定
+    ////ID3D11SamplerState* samplers[] = { m_states->PointClamp() };
+    ////context->PSSetSamplers(0, 1, samplers);
+
+    //// ワールド行列
+    //SimpleMath::Matrix world;
+    //m_basicEffect->SetWorld(world);
+    //// ビュー行列
+    //m_basicEffect->SetView(view);
+    //// 射影行列
+    //m_basicEffect->SetProjection(m_proj);
+
+    //// テクスチャ
+    ////m_basicEffect->SetTexture(m_texture.Get());
+
+    //// エフェクトを適応する
+    //m_basicEffect->Apply(context);
+
+    //// 入力レイアウト
+    //context->IASetInputLayout(m_inputLayout.Get());
+
+    //// プリミティブバッチの描画
+    //m_primitiveBatch->Begin();
+
+    //// 四角形の描画
+    //m_primitiveBatch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, g_indexes, 6 * 4, g_vertexes, 4 * 4);
+
+    //m_primitiveBatch->End();
 
     ///////////////////////////////////////////////////////////
 
@@ -339,6 +370,14 @@ void Game::CreateDeviceDependentResources()
         CreateDDSTextureFromFile(
             device, L"Resources\\Models\\image3.dds", nullptr, m_texture.ReleaseAndGetAddressOf())
     );
+
+    // 床のモデルの読み込み
+    EffectFactory fx(device);
+    fx.SetDirectory(L"Resources\\Models");
+    m_floorModel = Model::CreateFromSDKMESH(device, L"Resources\\Models\\floor.sdkmesh", fx);
+
+    // ボールのモデルの読み込み
+    m_ballModel = Model::CreateFromSDKMESH(device, L"Resources\\Models\\ball.sdkmesh", fx);
 
 }
 

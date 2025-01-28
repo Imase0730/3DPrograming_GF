@@ -96,4 +96,13 @@ private:
     // ライトの方向ベクトル
     DirectX::SimpleMath::Vector3 m_lightDir;
 
+    // 床のモデル
+    std::unique_ptr<DirectX::Model> m_floorModel;
+
+    // ボールのモデル
+    std::unique_ptr<DirectX::Model> m_ballModel;
+
+    // ボールの位置
+    DirectX::SimpleMath::Vector3 m_ballPos;
+
 };
