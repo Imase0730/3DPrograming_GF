@@ -88,7 +88,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
 
     // プリミティブバッチ
-    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionNormal>> m_primitiveBatch;
+    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColorTexture>> m_primitiveBatch;
  
     // テクスチャハンドル
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_texture;
@@ -99,8 +99,14 @@ private:
     // 床のモデル
     std::unique_ptr<DirectX::Model> m_floorModel;
 
-    // ボールのモデル
-    std::unique_ptr<DirectX::Model> m_ballModel;
+    // 猿のモデル
+    std::unique_ptr<DirectX::Model> m_model;
+
+    // 丸影の描画関数
+    void DrawShadow(const DirectX::SimpleMath::Vector3& pos, const DirectX::SimpleMath::Matrix& view);
+
+    // 丸影用のブレンドステート
+    Microsoft::WRL::ComPtr<ID3D11BlendState> m_blendState;
 
     // ボールの位置
     DirectX::SimpleMath::Vector3 m_ballPos;
