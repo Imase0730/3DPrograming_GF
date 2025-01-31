@@ -58,9 +58,6 @@ void Game::Initialize(HWND window, int width, int height)
     // デバッグカメラの作成
     m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
 
-    // ライトの方向ベクトルの初期化
-    m_lightDir = SimpleMath::Vector3(1.0f, 0.0f, 0.0f);
-
     // ボールの初期位置
     m_ballPos = SimpleMath::Vector3(0.0f, 0.5f, 0.0f);
 }
@@ -87,10 +84,6 @@ void Game::Update(DX::StepTimer const& timer)
 
     // デバッグカメラの更新
     m_debugCamera->Update();
-
-    // ライトをY軸回転する
-    SimpleMath::Matrix rotY = SimpleMath::Matrix::CreateRotationY(XMConvertToRadians(45.0f) * elapsedTime);
-    m_lightDir = SimpleMath::Vector3::Transform(m_lightDir, rotY);
 
     // ボールを上下に揺らす（sin関数を使用）
     m_ballPos.y = 0.5f + (sinf(timer.GetTotalSeconds()) + 1.0f) * 0.5f;

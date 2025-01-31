@@ -93,9 +93,6 @@ private:
     // テクスチャハンドル
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_texture;
 
-    // ライトの方向ベクトル
-    DirectX::SimpleMath::Vector3 m_lightDir;
-
     // 床のモデル
     std::unique_ptr<DirectX::Model> m_floorModel;
 
