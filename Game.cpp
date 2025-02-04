@@ -124,6 +124,31 @@ void Game::Render()
     );
 
     // ビルボードの描画
+    SimpleMath::Vector3 cameraPos = m_debugCamera->GetEyePosition();
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            SimpleMath::Vector3 pos(0.0f, 0.5f, 0.0f);
+            pos.x = static_cast<float>(i) - 1.0f;
+            pos.z = static_cast<float>(j) - 1.0f;
+            world = SimpleMath::Matrix::CreateBillboard(pos, -cameraPos, SimpleMath::Vector3::UnitY);
+            DrawBillboard(world, view);
+        }
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            SimpleMath::Vector3 pos(0.0f, 1.0f, 0.0f);
+            pos.x = static_cast<float>(i) - 0.5f;
+            pos.z = static_cast<float>(j) - 0.5f;
+            world = SimpleMath::Matrix::CreateBillboard(pos, -cameraPos, SimpleMath::Vector3::UnitY);
+            DrawBillboard(world, view);
+        }
+    }
+    SimpleMath::Vector3 pos(0.0f, 1.5f, 0.0f);
+    world = SimpleMath::Matrix::CreateBillboard(pos, -cameraPos, SimpleMath::Vector3::UnitY);
     DrawBillboard(world, view);
 
     ///////////////////////////////////////////////////////////
@@ -248,6 +273,10 @@ void Game::CreateDeviceDependentResources()
     // テクスチャ(ON)
     m_basicEffect->SetTextureEnabled(true);
 
+    // アルファテストエフェクトの作成
+    m_alphaTestEffect = std::make_unique<AlphaTestEffect>(device);
+    m_alphaTestEffect->SetReferenceAlpha(200);
+
     // 入力レイアウトの作成
     DX::ThrowIfFailed(
         CreateInputLayoutFromEffect<VertexPositionTexture>(
@@ -260,7 +289,7 @@ void Game::CreateDeviceDependentResources()
     // DDSテクスチャの読み込み
     DX::ThrowIfFailed(
         CreateDDSTextureFromFile(
-            device, L"Resources\\Models\\image1.dds", nullptr, m_texture.ReleaseAndGetAddressOf())
+            device, L"Resources\\Models\\ball.dds", nullptr, m_texture.ReleaseAndGetAddressOf())
     );
 
     // 床のモデルの読み込み
@@ -328,19 +357,19 @@ void Game::DrawBillboard(const SimpleMath::Matrix& world, const SimpleMath::Matr
     context->PSSetSamplers(0, 1, samplers);
 
     // ワールド行列
-    m_basicEffect->SetWorld(world);
+    m_alphaTestEffect->SetWorld(world);
 
     // ビュー行列
-    m_basicEffect->SetView(view);
+    m_alphaTestEffect->SetView(view);
 
     // 射影行列
-    m_basicEffect->SetProjection(m_proj);
+    m_alphaTestEffect->SetProjection(m_proj);
 
     // テクスチャ
-    m_basicEffect->SetTexture(m_texture.Get());
+    m_alphaTestEffect->SetTexture(m_texture.Get());
 
     // エフェクトを適応する
-    m_basicEffect->Apply(context);
+    m_alphaTestEffect->Apply(context);
 
     // 入力レイアウト
     context->IASetInputLayout(m_inputLayout.Get());

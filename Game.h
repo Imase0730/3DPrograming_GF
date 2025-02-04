@@ -84,6 +84,9 @@ private:
     // ベーシックエフェクト
     std::unique_ptr<DirectX::BasicEffect> m_basicEffect;
 
+    // アルファテストエフェクト
+    std::unique_ptr<DirectX::AlphaTestEffect> m_alphaTestEffect;
+
     // 入力レイアウト
     Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
 
